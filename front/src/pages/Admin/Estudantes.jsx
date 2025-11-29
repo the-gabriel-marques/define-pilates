@@ -1,5 +1,7 @@
 import SidebarUnificada from "@/components/layout/Sidebar/SidebarUnificada";
 import { sidebarConfigs } from "@/components/layout/Sidebar/sidebarConfigs";
+import { UserPlus } from "lucide-react";
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useSidebar } from "@/context/SidebarContext";
 import api from "@/services/api";
@@ -21,6 +23,10 @@ export default function Estudantes() {
   const actionMenuRef = useRef(null);
   const navigate = useNavigate();
 
+    const handleCadastrar = (e) => {
+    e.stopPropagation();
+    navigate("/student-signin");
+    };
   // Função para buscar todos os alunos
   const fetchStudents = async () => {
     setLoading(true);
@@ -203,6 +209,10 @@ export default function Estudantes() {
               <h1 className={`font-bold text-[#111111] ${isMobile ? 'text-2xl mb-4' : 'text-[28px]'}`}>
                 Gerenciar Estudantes
               </h1>
+
+              <button onClick={handleCadastrar} className="flex items-center gap-2 bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition w-full sm:w-auto">
+                <UserPlus size={18} /> Cadastrar Estudante
+              </button>
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative">
