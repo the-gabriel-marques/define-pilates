@@ -124,6 +124,11 @@ export default function ColaboradoresPage() {
     navigate("/colaborator-signin");
   };
 
+  const handleCadastrarInstrutor = (e) => {
+    e.stopPropagation();
+    navigate("/instructor-signin");
+  };
+
   const CargoBadge = ({ cargo }) => {
     const styleMap = {
       "Supremo": "bg-purple-100 text-purple-800 border border-purple-200", 
@@ -158,6 +163,9 @@ export default function ColaboradoresPage() {
               <h1 className="text-2xl font-semibold text-gray-800">Colaboradores</h1>
               <button onClick={handleCadastrar} className="flex items-center gap-2 bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition w-full sm:w-auto">
                 <UserPlus size={18} /> Cadastrar Colaborador
+              </button>
+              <button onClick={handleCadastrarInstrutor} className="flex items-center gap-2 bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition w-full sm:w-auto">
+                <UserPlus size={18} /> Cadastrar Instrutor
               </button>
             </div>
 
