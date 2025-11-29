@@ -1,0 +1,2 @@
+back/config/*.env
+back/__pycache__
