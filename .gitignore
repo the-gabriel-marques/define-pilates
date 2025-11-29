@@ -1,4 +1,3 @@
-back/config/*.env
 back/venv
 back/__pycache__
 
