@@ -2,20 +2,20 @@
 import React, { useState, useEffect } from "react";
 import { Search, Filter, ChevronDown, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; 
 import SidebarUnificada from "@/components/layout/Sidebar/SidebarUnificada";
 import { sidebarConfigs } from "@/components/layout/Sidebar/sidebarConfigs";
 import { useSidebar } from "@/context/SidebarContext";
 import api from "@/services/api";
+
 // =======================================================================
 // CONFIGURAÇÃO DA API
 // =======================================================================
 
-// Vazio para usar Proxy do Vite
 const API_BASE_URL = ""; 
 
 const ENDPOINTS = {
   COLABORADORES: "/colaboradore/", 
+  INSTRUTORES: "/instrutores/",
   COLABORADOR_POR_ID: (id) => `/colaboradore/${id}`,
 };
 
@@ -27,27 +27,34 @@ const getToken = () => {
   return localStorage.getItem("accessToken");
 };
 
+// Busca Colaboradores
 const apiFetchColaboradores = async () => {
   try {
     const token = getToken();
-    
     if (!token) throw new Error("LOGIN_REQUIRED");
 
-    const config = {
-      headers: { Authorization: `Bearer ${token}` },
-    };
-
-    // const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.COLABORADORES}`, config);
-    const response= await api.get(`${API_BASE_URL}${ENDPOINTS.COLABORADORES}`)
-    // console.log(teste.data)
+    const response = await api.get(`${API_BASE_URL}${ENDPOINTS.COLABORADORES}`);
     return response.data;
 
   } catch (err) {
     if (err.message === "LOGIN_REQUIRED") throw new Error("Usuário não autenticado.");
     if (err.response && err.response.status === 401) throw new Error("Sessão expirada. Faça login novamente.");
-    
-    console.error("Erro API:", err);
+    console.error("Erro API Colaboradores:", err);
     throw new Error("Falha na conexão.");
+  }
+};
+
+// Busca Instrutores
+const apiFetchInstrutores = async () => {
+  try {
+    const token = getToken();
+    if (!token) throw new Error("LOGIN_REQUIRED");
+
+    const response = await api.get(`${API_BASE_URL}${ENDPOINTS.INSTRUTORES}`);
+    return response.data;
+  } catch (err) {
+    console.error("Erro API Instrutores:", err);
+    return []; 
   }
 };
 
@@ -71,12 +78,25 @@ export default function ColaboradoresPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await apiFetchColaboradores();
-        if (Array.isArray(data)) {
-            setColaboradores(data);
-        } else {
-            setColaboradores([]); 
+        const [dataColabs, dataInstrutores] = await Promise.all([
+            apiFetchColaboradores(),
+            apiFetchInstrutores()
+        ]);
+
+        let listaUnificada = [];
+
+        if (Array.isArray(dataColabs)) {
+            const formatados = dataColabs.map(c => ({ ...c, tipoUsuario: 'colaborador' }));
+            listaUnificada = [...listaUnificada, ...formatados];
         }
+
+        if (Array.isArray(dataInstrutores)) {
+            const formatados = dataInstrutores.map(i => ({ ...i, tipoUsuario: 'instrutor' }));
+            listaUnificada = [...listaUnificada, ...formatados];
+        }
+
+        setColaboradores(listaUnificada);
+
       } catch (err) {
         setError(err.message);
       } finally {
@@ -86,15 +106,14 @@ export default function ColaboradoresPage() {
     fetchDados();
   }, []); 
 
-  // Função Juíza de Cargo
   const determinarCargoVisual = (colab) => {
+      if (colab.tipoUsuario === 'instrutor') return "Instrutor";
       if (colab.recepcionista && colab.recepcionista !== null) return "Recepcionista";
       if (colab.lv_acesso === "supremo") return "Supremo";
       if (colab.lv_acesso === "colaborador") return "Colaborador";
       return colab.cargo || "Indefinido";
   };
 
-  // Filtros
   const colaboradoresFiltrados = colaboradores
     .filter((c) => {
       const nomeReal = c.name_user || c.nome || ""; 
@@ -115,8 +134,11 @@ export default function ColaboradoresPage() {
       return 0;
     });
 
-  const handleVisualizar = (id) => {
-    navigate(`/admin/colaboradores/${id}`);
+  const handleVisualizar = (item) => {
+    const id = item.id || item.id_user || item._id;
+    navigate(`/admin/colaboradores/${id}`, { 
+        state: { tipoUsuario: item.tipoUsuario } 
+    });
   };
 
   const handleCadastrar = (e) => {
@@ -135,6 +157,7 @@ export default function ColaboradoresPage() {
       "supremo": "bg-purple-100 text-purple-800 border border-purple-200", 
       "Colaborador": "bg-blue-100 text-blue-800 border border-blue-200",
       "colaborador": "bg-blue-100 text-blue-800 border border-blue-200",
+      "Instrutor": "bg-orange-100 text-orange-800 border border-orange-200",
       "Admin": "bg-indigo-100 text-indigo-800 border border-indigo-200",
       "Recepcionista": "bg-green-100 text-green-800 border border-green-200",
       "recepcionista": "bg-green-100 text-green-800 border border-green-200",
@@ -159,15 +182,31 @@ export default function ColaboradoresPage() {
         <main className="p-4 sm:p-8 flex flex-col items-center">
           <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm p-6">
             
-            <div className="flex flex-col sm:flex-row items-center justify-between mb-6 mt-5 gap-4 p-4">
-              <h1 className="text-2xl font-semibold text-gray-800">Colaboradores</h1>
-              <button onClick={handleCadastrar} className="flex items-center gap-2 bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition w-full sm:w-auto">
-                <UserPlus size={18} /> Cadastrar Colaborador
-              </button>
-              <button onClick={handleCadastrarInstrutor} className="flex items-center gap-2 bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition w-full sm:w-auto">
-                <UserPlus size={18} /> Cadastrar Instrutor
-              </button>
+            {/* --- CABEÇALHO E BOTÕES ATUALIZADOS --- */}
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-8 mt-4 gap-4">
+              <h1 className="text-2xl font-bold text-gray-800">Colaboradores & Instrutores</h1>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {/* Botão Novo Colaborador (Verde/Teal) */}
+                <button 
+                    onClick={handleCadastrar} 
+                    className="flex items-center justify-center gap-2 bg-teal-500 text-white px-5 py-2.5 rounded-lg hover:bg-teal-600 transition shadow-sm font-medium w-full sm:w-auto"
+                >
+                    <UserPlus size={18} /> 
+                    Novo Colaborador
+                </button>
+
+                {/* Botão Novo Instrutor (Laranja) */}
+                <button 
+                    onClick={handleCadastrarInstrutor} 
+                    className="flex items-center justify-center gap-2 bg-[#f97316] text-white px-5 py-2.5 rounded-lg hover:bg-[#ea580c] transition shadow-sm font-medium w-full sm:w-auto"
+                >
+                    <UserPlus size={18} /> 
+                    Novo Instrutor
+                </button>
+              </div>
             </div>
+            {/* -------------------------------------- */}
 
             {isLoading && <p className="text-gray-500 text-center mb-4 animate-pulse">Carregando dados...</p>}
             
@@ -184,6 +223,7 @@ export default function ColaboradoresPage() {
                   <option value="">Todos os cargos</option>
                   <option value="supremo">Supremo</option>
                   <option value="colaborador">Colaborador</option>
+                  <option value="instrutor">Instrutor</option>
                   <option value="recepcionista">Recepcionista</option>
                 </select>
                 <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -218,7 +258,7 @@ export default function ColaboradoresPage() {
                         <td className="px-4 py-3"><CargoBadge cargo={determinarCargoVisual(colab)} /></td>
                         <td className="px-4 py-3 text-gray-600">{colab.email_user || colab.email || "—"}</td>
                         <td className="px-4 py-3 text-center">
-                          <button onClick={() => handleVisualizar(colab.id || colab.id_user || colab._id)} className="px-3 py-1.5 bg-teal-500 text-white text-sm rounded-md hover:bg-teal-600 transition">Visualizar</button>
+                          <button onClick={() => handleVisualizar(colab)} className="px-3 py-1.5 bg-teal-500 text-white text-sm rounded-md hover:bg-teal-600 transition">Visualizar</button>
                         </td>
                       </tr>
                     ))

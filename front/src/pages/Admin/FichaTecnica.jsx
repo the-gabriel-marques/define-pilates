@@ -1,6 +1,7 @@
+// FichaTecnica.jsx
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom"; // <--- ADICIONADO useLocation
 import { Edit, Save, X, Plus, Trash2, AlertCircle, MapPin, Phone, User, Calendar } from "lucide-react";
 import axios from "axios"; 
 
@@ -10,9 +11,12 @@ import axios from "axios";
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
+// <--- ATUALIZADO: ENDPOINTS PARA COLABORADOR E INSTRUTOR
 const ENDPOINTS = {
   COLABORADOR_GET: (id) => `/colaboradore/${id}`,
   COLABORADOR_UPDATE: (id) => `/colaboradore/colaboradores/${id}`,
+  INSTRUTOR_GET: (id) => `/instrutores/${id}`,
+  INSTRUTOR_UPDATE: (id) => `/instrutores/instrutores/${id}`,
 };
 
 const getToken = () => localStorage.getItem("accessToken");
@@ -26,14 +30,23 @@ const formatarDataParaInput = (dataISO) => {
 // INTEGRAÇÃO (BACK-END)
 // =======================================================================
 
-const apiFetchColaborador = async (id) => {
+// <--- ATUALIZADO: RECEBE O TIPO DO USUÁRIO
+const apiFetchUsuario = async (id, tipo) => {
   try {
     const token = getToken();
     if (!token) throw new Error("LOGIN_REQUIRED");
 
     const config = { headers: { Authorization: `Bearer ${token}` } };
-    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.COLABORADOR_GET(id)}`, config);
     
+    // Decide qual URL usar baseado no tipo
+    let url = "";
+    if (tipo === 'instrutor') {
+        url = `${API_BASE_URL}${ENDPOINTS.INSTRUTOR_GET(id)}`;
+    } else {
+        url = `${API_BASE_URL}${ENDPOINTS.COLABORADOR_GET(id)}`;
+    }
+
+    const response = await axios.get(url, config);
     return response.data;
 
   } catch (err) {
@@ -43,7 +56,8 @@ const apiFetchColaborador = async (id) => {
   }
 };
 
-const apiSaveColaborador = async (id, formState, dadosOriginais) => {
+// <--- ATUALIZADO: RECEBE O TIPO DO USUÁRIO
+const apiSaveUsuario = async (id, formState, dadosOriginais, tipo) => {
   try {
     const token = getToken();
     if (!token) throw new Error("LOGIN_REQUIRED");
@@ -51,7 +65,8 @@ const apiSaveColaborador = async (id, formState, dadosOriginais) => {
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
     // 1. LOGICA DE CARGO
-    const isRecepcionista = formState.cargo === "Recepcionista";
+    // Apenas colaboradores comuns podem ser recepcionistas
+    const isRecepcionista = tipo !== 'instrutor' && formState.cargo === "Recepcionista";
 
     // 2. LOGICA DE CONTATOS
     let listaContatos = [];
@@ -80,17 +95,25 @@ const apiSaveColaborador = async (id, formState, dadosOriginais) => {
     const payload = {
         name_user: formState.nome,
         email_user: formState.email,
-        is_recepcionista: isRecepcionista,
         contatos: listaContatos.length > 0 ? listaContatos : undefined,
         endereco: listaEnderecos.length > 0 ? listaEnderecos : undefined,
         senha_user: formState.novaSenha ? formState.novaSenha : undefined
     };
 
-    const response = await axios.patch(
-      `${API_BASE_URL}${ENDPOINTS.COLABORADOR_UPDATE(id)}`,
-      payload,
-      config
-    );
+    // Adiciona campo is_recepcionista apenas se não for instrutor
+    if (tipo !== 'instrutor') {
+        payload.is_recepcionista = isRecepcionista;
+    }
+
+    // Decide URL de atualização
+    let url = "";
+    if (tipo === 'instrutor') {
+        url = `${API_BASE_URL}${ENDPOINTS.INSTRUTOR_UPDATE(id)}`;
+    } else {
+        url = `${API_BASE_URL}${ENDPOINTS.COLABORADOR_UPDATE(id)}`;
+    }
+
+    const response = await axios.patch(url, payload, config);
     return response.data;
 
   } catch (err) {
@@ -137,6 +160,10 @@ const EditableField = ({ label, value, name, onChange, isEditing, type = "text",
 export default function FichaColaborador() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation(); // <--- PEGA O ESTADO DA NAVEGAÇÃO
+
+  // Define o tipo com base no state ou padroniza como colaborador (fallback)
+  const tipoUsuario = location.state?.tipoUsuario || 'colaborador'; 
   
   const [colaboradorDadosOriginais, setColaboradorDadosOriginais] = useState(null); 
   const [formState, setFormState] = useState(null); 
@@ -149,7 +176,8 @@ export default function FichaColaborador() {
     const fetchDados = async () => {
       setIsLoading(true);
       try {
-        const data = await apiFetchColaborador(id);
+        // <--- CHAMA A FUNÇÃO GENÉRICA PASSANDO O TIPO
+        const data = await apiFetchUsuario(id, tipoUsuario);
         setColaboradorDadosOriginais(data);
 
         // Mapeamento
@@ -166,9 +194,14 @@ export default function FichaColaborador() {
             tipoEnd = data.endereco[0].tipo_endereco;
         }
 
+        // <--- LÓGICA DE CARGO ATUALIZADA
         let cargo = "Colaborador";
-        if (data.recepcionista) cargo = "Recepcionista";
-        if (data.lv_acesso === "supremo") cargo = "Supremo";
+        if (tipoUsuario === 'instrutor') {
+            cargo = "Instrutor";
+        } else {
+            if (data.recepcionista) cargo = "Recepcionista";
+            if (data.lv_acesso === "supremo") cargo = "Supremo";
+        }
 
         setFormState({
             nome: data.name_user,
@@ -194,7 +227,7 @@ export default function FichaColaborador() {
     };
     
     if (id) fetchDados();
-  }, [id]);
+  }, [id, tipoUsuario]); // <--- ADICIONADO tipoUsuario NA DEPENDÊNCIA
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -204,7 +237,8 @@ export default function FichaColaborador() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await apiSaveColaborador(id, formState, colaboradorDadosOriginais);
+      // <--- PASSA O tipoUsuario PARA O SAVE
+      await apiSaveUsuario(id, formState, colaboradorDadosOriginais, tipoUsuario);
       alert("Dados salvos com sucesso!");
       window.location.reload();
     } catch (err) {
@@ -242,7 +276,9 @@ export default function FichaColaborador() {
         </div>
         
         <div className="pt-16 px-8 pb-8">
-            <h1 className="text-2xl font-bold text-gray-800 mb-1">CADASTRO DE COLABORADOR</h1>
+            <h1 className="text-2xl font-bold text-gray-800 mb-1">
+                {tipoUsuario === 'instrutor' ? 'CADASTRO DE INSTRUTOR' : 'CADASTRO DE COLABORADOR'}
+            </h1>
             <p className="text-gray-500 mb-8 text-sm">Visualize e edite todas as informações cadastrais.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -277,7 +313,18 @@ export default function FichaColaborador() {
                     )}
 
                     <div className="grid grid-cols-2 gap-4">
-                        <EditableField label="Cargo / Função" name="cargo" value={formState.cargo} onChange={handleChange} isEditing={editMode} type="select" options={["Colaborador", "Recepcionista"]} />
+                        {/* Se for instrutor, bloqueamos a edição do cargo ou mostramos apenas "Instrutor".
+                           Se for colaborador, mostramos as opções originais.
+                        */}
+                        <EditableField 
+                            label="Cargo / Função" 
+                            name="cargo" 
+                            value={formState.cargo} 
+                            onChange={handleChange} 
+                            isEditing={editMode && tipoUsuario !== 'instrutor'} 
+                            type="select" 
+                            options={tipoUsuario === 'instrutor' ? ["Instrutor"] : ["Colaborador", "Recepcionista"]} 
+                        />
                         <EditableField label="Estúdio Alocado" name="estudio" value={formState.estudio} onChange={handleChange} isEditing={editMode} type="select" options={["Estúdio Itaquera", "Estúdio São Miguel"]} />
                     </div>
 
