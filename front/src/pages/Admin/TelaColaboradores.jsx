@@ -38,9 +38,6 @@ const apiFetchColaboradores = async () => {
     };
 
     const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.COLABORADORES}`, config);
-    
-    // Detetive (pode remover depois se quiser)
-    console.log("DADOS REAIS DO PYTHON (Lista):", response.data);
 
     return response.data;
 
