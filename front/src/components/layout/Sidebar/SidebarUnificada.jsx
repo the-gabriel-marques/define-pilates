@@ -1,10 +1,11 @@
 // @ts-nocheck
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, User, LogOut, Menu, X } from "lucide-react";
 import { useSidebar } from "@/context/SidebarContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Sidebar/button";
+import api from "@/services/api"; 
 
 const ICON_EXPANDED = "h-7 w-7";
 const ICON_COLLAPSED = "h-8 w-8";
@@ -16,6 +17,98 @@ const Sidebar = ({ menuItems, userInfo, isOpen, onOpenChange }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [usuarioReal, setUsuarioReal] = useState(userInfo);
+
+  // 1. ATUALIZAÇÃO REATIVA: Se o Dashboard (ou qualquer pai) mandar dados novos, atualiza.
+  useEffect(() => {
+    if (userInfo && userInfo.name && userInfo.name !== "Estudante" && userInfo.name !== "Carregando...") {
+        setUsuarioReal(userInfo);
+    }
+  }, [userInfo]);
+
+  // ==================================================================
+  // LÓGICA DE CARREGAMENTO BASEADA NA SUA DOCUMENTAÇÃO DA API
+  // ==================================================================
+  useEffect(() => {
+    const carregarUsuario = async () => {
+      try {
+        // 1. Se já tiver dados salvos, usa eles e economiza requisição
+        const dadosString = localStorage.getItem("userData");
+        if (dadosString) {
+          const dados = JSON.parse(dadosString);
+          setUsuarioReal({
+            name: dados.name_user || dados.nome || dados.name || userInfo?.name,
+            email: dados.email_user || dados.email || userInfo?.email,
+          });
+          // Se tiver dados no cache, não impede a tentativa de buscar dados frescos abaixo
+        }
+
+        // 2. Recupera ID e ROLE salvos no Login
+        const userId = localStorage.getItem("userIdTemp");
+        const userRole = localStorage.getItem("userRole")?.toLowerCase(); 
+
+        if (userId && userRole) {
+            let endpoint = "";
+            
+            // Define a rota específica baseada no cargo
+            if (userRole.includes("instrutor") || userRole.includes("professor")) {
+                endpoint = `/instrutores/${userId}`; 
+            } 
+            else if (userRole.includes("aluno")) {
+                endpoint = `/alunos/${userId}`;      
+            } 
+            else {
+                endpoint = `/colaboradore/${userId}`; 
+            }
+
+            try {
+                // Tenta buscar na rota específica (ex: /alunos/11)
+                const response = await api.get(endpoint);
+                const dadosAPI = response.data;
+
+                const novoUsuario = {
+                    name: dadosAPI.name_user || dadosAPI.nome || dadosAPI.nome_instrutor || dadosAPI.nome_aluno || "Usuário",
+                    email: dadosAPI.email_user || dadosAPI.email || "email@sistema.com",
+                };
+
+                setUsuarioReal(novoUsuario);
+                localStorage.setItem("userData", JSON.stringify(dadosAPI));
+
+            } catch (errApi) {
+                // --- AQUI ESTÁ A CORREÇÃO MÁGICA ---
+                // Se a rota específica falhar (404), tenta a rota universal /users/me
+                // Isso resolve o problema do Aluno sem cadastro completo
+                console.warn(`Rota específica ${endpoint} falhou (provavelmente 404). Tentando /users/me...`);
+                
+                try {
+                    const resMe = await api.get("/users/me");
+                    const dadosMe = resMe.data;
+                    
+                    const usuarioRecuperado = {
+                        name: dadosMe.name_user || dadosMe.nome || dadosMe.username || "Usuário",
+                        email: dadosMe.email_user || dadosMe.email || ""
+                    };
+                    
+                    setUsuarioReal(usuarioRecuperado);
+                    localStorage.setItem("userData", JSON.stringify(dadosMe)); // Atualiza cache
+                } catch (errMe) {
+                    console.error("Falha total: Nem a rota específica nem /users/me funcionaram.");
+                }
+            }
+        }
+      } catch (error) {
+        console.error("Erro geral na sidebar:", error);
+      }
+    };
+
+    carregarUsuario();
+  }, []); 
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/"); 
+  };
+
   const UserProfile = ({ isCollapsed = false }) => (
     <div className="p-4 border-t border-white/10 flex-shrink-0">
       {!isCollapsed ? (
@@ -26,12 +119,15 @@ const Sidebar = ({ menuItems, userInfo, isOpen, onOpenChange }) => {
             </div>
             <div className="flex-1 min-w-0">
               <p className={`font-medium text-white ${TEXT_SIZE}`}>
-                {userInfo.name}
+                {usuarioReal?.name || "Carregando..."}
               </p>
-              <p className="text-sm text-white/50 truncate">{userInfo.email}</p>
+              <p className="text-sm text-white/50 truncate">{usuarioReal?.email || ""}</p>
             </div>
           </div>
-          <button className="w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all"
+          >
             <LogOut className="h-6 w-6" />
             <span>Sair</span>
           </button>
@@ -42,6 +138,7 @@ const Sidebar = ({ menuItems, userInfo, isOpen, onOpenChange }) => {
             <User className={`${ICON_COLLAPSED} text-white`} />
           </div>
           <button
+            onClick={handleLogout}
             className="text-white/60 hover:text-white hover:bg-white/10 h-12 w-12 rounded flex items-center justify-center transition-all duration-300 hover:scale-110"
             title="Sair"
           >

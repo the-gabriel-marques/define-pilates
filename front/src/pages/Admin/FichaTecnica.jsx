@@ -8,7 +8,7 @@ import axios from "axios";
 // CONFIGURAÇÃO
 // =======================================================================
 
-const API_BASE_URL = "";
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 const ENDPOINTS = {
   COLABORADOR_GET: (id) => `/colaboradore/${id}`,
@@ -95,7 +95,6 @@ const apiSaveColaborador = async (id, formState, dadosOriginais) => {
 
   } catch (err) {
     if (err.response && err.response.status === 422) {
-        console.log("Erro 422:", err.response.data);
         throw new Error("Dados inválidos.");
     }
     throw new Error("Não foi possível salvar as alterações.");

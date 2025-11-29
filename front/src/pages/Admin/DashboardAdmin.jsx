@@ -22,9 +22,7 @@ import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
-  ArrowRight,
   Clock,
-  Edit2,
   ChevronRight,
   Loader,
 } from "lucide-react";
@@ -150,10 +148,10 @@ const StudentListItem = ({ student, onView }) => {
     >
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-          {student.nome || student.name}
+          {student.nome || student.name_user || student.name}
         </p>
         <div className="flex items-center gap-4 mt-1 text-xs sm:text-sm text-gray-600">
-          <span>{student.email}</span>
+          <span>{student.email || student.email_user}</span>
           <span
             style={{ color: getStatusColor(student.status || "Ativo") }}
             className="font-medium"
@@ -162,7 +160,6 @@ const StudentListItem = ({ student, onView }) => {
           </span>
         </div>
       </div>
-      {/* Ícone de olho removido, clique na div inteira agora aciona o onView */}
     </div>
   );
 };
@@ -176,28 +173,25 @@ export default function DashboardAdmin() {
   const [activeAlertTab, setActiveAlertTab] = useState("planos");
   const [alertProcessing, setAlertProcessing] = useState(null);
 
-// 1. Defina o valor inicial de segurança baseado em sidebarConfigs
-const defaultUserInfo = sidebarConfigs.administrador.userInfo; 
-const [userInfo, setUserInfo] = useState(defaultUserInfo);
+  // User Info State
+  const defaultUserInfo = sidebarConfigs.administrador.userInfo; 
+  const [userInfo, setUserInfo] = useState(defaultUserInfo);
 
-// 2. Busque os dados reais na API
-useEffect(() => {
-  const fetchUserData = async () => {
-    try {
-      const response = await api.get("/users/me");
-      // ATUALIZA o estado com os dados do backend
-      setUserInfo({
-        name: response.data.name_user || response.data.nome, // Campo do backend
-        email: response.data.email_user || response.data.email, // Campo do backend
-      });
-    } catch (error) {
-      // Se falhar, ele usa o valor inicial estático (defaultUserInfo)
-      console.error("Falha ao carregar dados do usuário:", error);
-    }
-  };
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await api.get("/users/me");
+        setUserInfo({
+          name: response.data.name_user || response.data.nome, 
+          email: response.data.email_user || response.data.email, 
+        });
+      } catch (error) {
+        console.error("Falha ao carregar dados do usuário:", error);
+      }
+    };
 
-  fetchUserData();
-}, []); // CORREÇÃO: Não esqueça o array de dependências vazio!
+    fetchUserData();
+  }, []); 
 
   // States for data
   const [loading, setLoading] = useState(true);
@@ -212,7 +206,6 @@ useEffect(() => {
   const [classesList, setClassesList] = useState([]);
   const [alertsList, setAlertsList] = useState([]);
   
-  // Financial data states (Mocked/Calculated since backend lacks direct endpoint)
   const [financialInfo, setFinancialInfo] = useState({
     ganhosMes: 0,
     gastosMes: 0,
@@ -229,13 +222,15 @@ useEffect(() => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const today = new Date().toISOString().split("T")[0];
+      // Data de hoje no formato YYYY-MM-DD
+      const today = new Date().toISOString().split("T")[0]; 
 
-      // Parallel data fetching for performance
+      // Parallel data fetching
       const [studentsRes, collaboratorsRes, classesRes, solicitacoesRes] = await Promise.allSettled([
         api.get("/alunos/"),
         api.get("/colaboradore/"),
-        api.get(`/agenda/cronograma?start_date=${today}&end_date=${today}`),
+        // MUDANÇA IMPORTANTE: Usando /aulas/ (SQL) em vez de /agenda/cronograma (Mongo vazio)
+        api.get("/aulas/"), 
         api.get("/solicitacao/"),
       ]);
 
@@ -246,12 +241,11 @@ useEffect(() => {
 
       if (studentsRes.status === "fulfilled") {
         students = studentsRes.value.data || [];
-        // Calculate actives
-        activeStudentsCount = students.length; // Assuming all returned are "active" or filter by status if available
+        activeStudentsCount = students.length;
         
-        // Calculate Plan Distribution (Safe fallback)
+        // Distribuição de Planos
         students.forEach(s => {
-            const planName = s.plano_nome || "Sem Plano"; // Verify field name in your response
+            const planName = s.plano_nome || s.plano || "Sem Plano"; 
             planCounts[planName] = (planCounts[planName] || 0) + 1;
         });
         setStudentsList(students);
@@ -265,30 +259,43 @@ useEffect(() => {
         collaboratorsCount = collaborators.length;
       }
 
-      // --- Process Classes ---
-      let classesTodayCount = 0;
+      // --- Process Classes (Lógica SQL + Filtro Front-end) ---
+      let classesToday = [];
       if (classesRes.status === "fulfilled") {
-        const classes = classesRes.value.data || [];
-        setClassesList(classes.map(c => ({
-            id: c.id,
-            title: c.tipo_aula || "Aula",
-            teacher: c.instrutor_nome || "Instrutor",
-            studio: "Estúdio Principal", // Default fallback
-            date: `${c.data} - ${c.horario_inicio}`
-        })));
-        classesTodayCount = classes.length;
+        const allClasses = classesRes.value.data || [];
+        
+        // Filtra apenas as aulas de HOJE
+        classesToday = allClasses.filter(c => {
+            const dataAula = c.data_aula || c.dataAgendaAula || "";
+            return dataAula.startsWith(today); // Compara "2025-11-29"
+        });
+
+        // Mapeia para o formato visual
+        setClassesList(classesToday.map(c => {
+            // Tenta extrair hora
+            let time = "00:00";
+            const rawTime = c.horario_inicio || c.horario;
+            if(rawTime) time = String(rawTime).substring(0, 5);
+            else if (c.data_aula && c.data_aula.includes('T')) time = c.data_aula.split('T')[1].substring(0, 5);
+
+            return {
+                id: c.id_aula || c._id,
+                title: c.titulo_aula || c.disciplina || "Aula",
+                teacher: "Instrutor ID " + c.fk_id_professor, // Ideal seria ter o mapa de nomes
+                studio: c.fk_id_estudio === 1 ? "Itaquera" : "São Miguel",
+                date: `${time}`
+            };
+        }));
       }
 
       // --- Process Alerts (Solicitacoes) ---
       let processedAlerts = [];
       if (solicitacoesRes.status === "fulfilled") {
         const solicitacoes = solicitacoesRes.value.data || [];
-        // Filter only PENDING requests
+        
         processedAlerts = solicitacoes
           .filter(s => s.status === "PENDENTE")
           .map(s => {
-            // Map Backend Enum to Frontend Types
-            // Assuming types: 'REPOSICAO', 'ADESAO_PLANO', etc.
             let type = "other";
             if (s.tipo_solicitacao === "REPOSICAO" || s.tipo_solicitacao === "REPOSICAO_AULA") type = "replacement";
             if (s.tipo_solicitacao === "ADESAO_PLANO" || s.tipo_solicitacao === "MUDANCA_PLANO") type = "plan";
@@ -296,9 +303,9 @@ useEffect(() => {
             return {
                 id: s.id,
                 type: type,
-                title: s.tipo_solicitacao?.replace('_', ' '),
+                title: s.tipo_solicitacao?.replace(/_/g, ' ') || "Solicitação",
                 text: s.descricao || "Solicitação pendente",
-                studentName: s.nome_aluno || "Aluno",
+                studentName: s.nome_aluno || "Aluno ID " + s.fk_id_aluno,
                 description: s.descricao
             };
           });
@@ -309,12 +316,11 @@ useEffect(() => {
       setDashboardData({
         estudantesAtivos: activeStudentsCount,
         totalColaboradores: collaboratorsCount,
-        aulasHoje: classesTodayCount,
-        tendenciaEstudantes: 0, // Requires historical data not available in endpoints
+        aulasHoje: classesToday.length, // Agora mostra o número real
+        tendenciaEstudantes: 0, 
       });
 
-      // --- Process Financials (Mocked / Derived) ---
-      // Since we can't fetch all payments without ID, we format data safely to avoid crash
+      // --- Process Financials ---
       const plansChartData = Object.keys(planCounts).map((key, index) => ({
         name: key,
         value: planCounts[key],
@@ -322,14 +328,13 @@ useEffect(() => {
       }));
 
       setFinancialInfo({
-        ganhosMes: 0, // Backend limitation: cannot fetch total income easily
+        ganhosMes: 0,
         gastosMes: 0,
         saldoMes: 0,
         tendenciaGanhos: 0,
         monthlyData: [
             { month: 'Jan', ganhos: 0, gastos: 0 },
             { month: 'Fev', ganhos: 0, gastos: 0 },
-            // Placeholder data to keep chart rendered but empty
         ],
         plansDistribution: plansChartData.length > 0 ? plansChartData : [{ name: 'Sem dados', value: 1, color: '#e5e7eb' }],
       });
@@ -344,14 +349,10 @@ useEffect(() => {
   const handleResolution = async (alertId, status) => {
     setAlertProcessing(alertId);
     try {
-      // Calls the endpoint: PUT /solicitacao/{id}/resolucao
       await api.put(`/solicitacao/${alertId}/resolucao`, null, {
-        params: { status_solicitacao: status } // Query param as per router definition
+        params: { status_solicitacao: status } 
       });
-      
-      // Refresh alerts list locally to avoid full reload
       setAlertsList(prev => prev.filter(a => a.id !== alertId));
-
     } catch (error) {
       console.error(`Erro ao resolver alerta ${status}:`, error);
       alert("Erro ao processar solicitação. Tente novamente.");
@@ -360,11 +361,12 @@ useEffect(() => {
     }
   };
 
-  const handleAcceptAlert = (alertId) => handleResolution(alertId, "ACEITO"); // Check backend Enum exact string
+  const handleAcceptAlert = (alertId) => handleResolution(alertId, "ACEITO");
   const handleRejectAlert = (alertId) => handleResolution(alertId, "RECUSADO");
 
   const handleStudentClick = (student) => {
-    navigate(`/admin/estudantes/${student.id}`);
+    const id = student.id || student.id_user || student.id_estudante;
+    navigate(`/admin/estudantes/${id}`);
   };
 
   return (
@@ -507,8 +509,7 @@ useEffect(() => {
                         >
                           {financialInfo.plansDistribution.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
-                          // <Cell key={entry.name} fill={entry.color} />
-                        ))}
+                          ))}
                         </Pie>
                         <Tooltip formatter={(value) => `${value} alunos`} />
                       </PieChart>
@@ -603,7 +604,6 @@ useEffect(() => {
               </div>
             </section>
             
-            {/* Recent Students and Upcoming Classes (Reused same logic as Alerts/Stats) */}
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                <div className="bg-white rounded-lg shadow-sm border border-gray-100">
                 <div className="border-b border-gray-200 p-4 sm:p-6">
@@ -617,7 +617,7 @@ useEffect(() => {
                 <div className="divide-y divide-gray-100">
                     {loading ? <div className="p-6"><Loader className="mx-auto animate-spin" /></div> : 
                         studentsList.slice(0, 4).map(student => (
-                            <StudentListItem key={student.id} student={student} onView={handleStudentClick} />
+                            <StudentListItem key={student.id || student.id_user} student={student} onView={handleStudentClick} />
                         ))
                     }
                 </div>
@@ -626,7 +626,7 @@ useEffect(() => {
                <div className="bg-white rounded-lg shadow-sm border border-gray-100">
                 <div className="border-b border-gray-200 p-4 sm:p-6">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Próximas Aulas</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">Próximas Aulas (Hoje)</h3>
                         <button onClick={() => navigate("/admin/agenda-estudio")} className="text-sm font-medium text-blue-600 hover:text-blue-700">Ver Calendário</button>
                     </div>
                 </div>

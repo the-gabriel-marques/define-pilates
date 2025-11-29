@@ -223,6 +223,7 @@ export default function ColaboradoresPage() {
           </div>
           <footer className="text-gray-600 text-sm mt-10 text-center space-y-1">
             <p>📞 Telefone/WhatsApp: (11) 94142-4166</p>
+            <p>📧Estrada Itaquera - Guaianases 45, sala 2 - Itaquera, São Paulo - SP, 08011-300</p>
             <p>📧 Unidade São Miguel Paulista: José Aldo Piassi, 165, São Miguel Paulista</p>
           </footer>
         </main>
