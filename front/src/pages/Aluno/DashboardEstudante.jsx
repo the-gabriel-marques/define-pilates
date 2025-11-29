@@ -280,24 +280,6 @@ const DashboardEstudante = () => {
                     color="#2B668B"
                     loading={loading}
                 />
-                <InfoCard 
-                    icon={CreditCard}
-                    label="Meu Plano"
-                    value={activePlan ? activePlan.name : "Sem plano ativo"}
-                    subtext={activePlan ? `Vence em ${activePlan.daysUntilDue} dias` : "Clique para contratar"}
-                    color="#67AF97"
-                    loading={loading}
-                    onClick={() => navigate("/aluno/planos")}
-                />
-                <InfoCard 
-                    icon={Receipt}
-                    label="Última Fatura"
-                    value={latestInvoice ? latestInvoice.amount : "---"}
-                    subtext={latestInvoice ? `Vencimento: ${latestInvoice.dueDate}` : "Nenhuma fatura pendente"}
-                    color="#F59E0B"
-                    loading={loading}
-                    onClick={() => navigate("/aluno/faturas")}
-                />
             </div>
 
             {/* Abas */}

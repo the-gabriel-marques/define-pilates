@@ -384,10 +384,10 @@ export default function AgendaEstudio() {
                 <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8">
                     <div className="bg-white rounded-lg shadow-lg flex flex-col p-4 sm:p-6 lg:p-8 w-full max-w-full lg:max-w-7xl mx-auto relative">
 
-                        <div className="mb-6 flex flex-col sm:flex-row justify-center items-center relative">
-                            <h2 className="font-semibold text-gray-900 text-2xl sm:text-3xl lg:text-4xl text-center">
-                                Agenda de Aulas
-                            </h2>
+                    <div className="flex items-center gap-3 mb-6 mt-16 sm:mt-0">
+                        <h1 className="font-semibold text-gray-900 text-2xl sm:text-3xl lg:text-4xl">
+                            Agenda de Aulas
+                        </h1>
                             <button
                                 onClick={() => setIsModalOpen(true)}
                                 className="mt-4 sm:mt-0 sm:absolute sm:right-0 bg-[#67AF97] hover:bg-[#559e85] text-white py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"

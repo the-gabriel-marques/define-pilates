@@ -154,7 +154,7 @@ export default function ColaboradoresPage() {
         <main className="p-4 sm:p-8 flex flex-col items-center">
           <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm p-6">
             
-            <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-6 mt-5 gap-4 p-4">
               <h1 className="text-2xl font-semibold text-gray-800">Colaboradores</h1>
               <button onClick={handleCadastrar} className="flex items-center gap-2 bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition w-full sm:w-auto">
                 <UserPlus size={18} /> Cadastrar Colaborador
