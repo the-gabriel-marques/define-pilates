@@ -27,7 +27,7 @@ export default function Estudantes() {
     try {
       const response = await api.get('/alunos/');
       
-      console.log("Dados brutos da API (Verifique se 'estudante' existe):", response.data);
+      // console.log("Dados brutos da API (Verifique se 'estudante' existe):", response.data);
 
       const mappedStudents = response.data.map(user => {
         const phone = user.contatos && user.contatos.length > 0 

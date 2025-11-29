@@ -319,13 +319,14 @@ const Financas = () => {
         // 1. Buscar todos os alunos
         const studentsRes = await api.get('/alunos/');
         const students = studentsRes.data || [];
+        // console.log(students)
 
         // 2. Buscar Contratos Ativos de cada aluno
         // Nota: O backend retorna o objeto contrato sem o valor monetário.
         // Precisamos buscar o plano depois para saber o valor.
         const contractsPromises = students.map(async (student) => {
             try {
-                const contractRes = await api.get(`/contratos/estudante/${student.id_user}/ativo`);
+                const contractRes = await api.get(`/contratos/estudante/${student.estudante.id_estudante}/ativo`);
                 
                 // Se status 204 (No Content) ou data vazia, retorna null
                 if (contractRes.status === 204 || !contractRes.data) return null;
