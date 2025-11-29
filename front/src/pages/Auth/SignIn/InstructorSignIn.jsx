@@ -108,7 +108,7 @@ const InstructorSignIn = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCadastroSucesso(true);
-            setTimeout(() => navigate('/aluno/dashboard'), 1000); 
+            setTimeout(() => navigate('/admin/dashboard'), 1000); 
 
         } catch (error) {
             const errorMessage = error.response?.data?.detail || "Erro ao cadastrar instrutor.";
