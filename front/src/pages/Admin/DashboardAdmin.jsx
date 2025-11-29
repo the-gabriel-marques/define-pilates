@@ -507,7 +507,8 @@ useEffect(() => {
                         >
                           {financialInfo.plansDistribution.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
+                          // <Cell key={entry.name} fill={entry.color} />
+                        ))}
                         </Pie>
                         <Tooltip formatter={(value) => `${value} alunos`} />
                       </PieChart>

@@ -6,7 +6,7 @@ import axios from "axios";
 import SidebarUnificada from "@/components/layout/Sidebar/SidebarUnificada";
 import { sidebarConfigs } from "@/components/layout/Sidebar/sidebarConfigs";
 import { useSidebar } from "@/context/SidebarContext";
-
+import api from "@/services/api";
 // =======================================================================
 // CONFIGURAÇÃO DA API
 // =======================================================================
@@ -37,8 +37,9 @@ const apiFetchColaboradores = async () => {
       headers: { Authorization: `Bearer ${token}` },
     };
 
-    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.COLABORADORES}`, config);
-
+    // const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.COLABORADORES}`, config);
+    const response= await api.get(`${API_BASE_URL}${ENDPOINTS.COLABORADORES}`)
+    // console.log(teste.data)
     return response.data;
 
   } catch (err) {
