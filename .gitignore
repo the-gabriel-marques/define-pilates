@@ -1,2 +1,6 @@
 back/config/*.env
+back/venv
 back/__pycache__
+
+front/node_modules
+front/BackEnd_Projeto_Sistema_Empresa_Pillates-main

@@ -1,61 +1,133 @@
 @echo off
-chcp 65001 > nul
-color 0A
+SETLOCAL EnableDelayedExpansion
+
+:: Define o título da janela
+TITLE Launcher Automatizado do SIG Pilates
 
 ECHO =================================================================
-ECHO 🚀 INICIANDO SISTEMA SIG PILATES (AMBIENTE LOCAL / PORTÁTIL)
+ECHO 🚀 INICIANDO SETUP E EXECUCAO DO SIG PILATES
 ECHO =================================================================
 
-:: --- CONFIGURAÇÃO DOS CAMINHOS RELATIVOS ---
-:: %~dp0 representa a pasta onde este arquivo .bat está salvo.
+:: Define o diretório raiz
+SET "ROOT_DIR=%~dp0"
 
-:: 1. Caminho RELATIVO do Back-end
-SET BACKEND_PATH="%~dp0back"
+:: --- CONFIGURAÇÃO ---
+SET "BACKEND_FOLDER=back"
+SET "FRONTEND_FOLDER=front"
 
-:: 2. Caminho RELATIVO do Front-end
-SET FRONTEND_PATH="%~dp0front"
+:: Caminhos completos
+SET "BACKEND_PATH=%ROOT_DIR%%BACKEND_FOLDER%"
+SET "FRONTEND_PATH=%ROOT_DIR%%FRONTEND_FOLDER%"
 
+:: --- VERIFICAÇÃO DE PASTAS ---
+IF NOT EXIST "%BACKEND_PATH%" GOTO ERRO_BACK
+IF NOT EXIST "%FRONTEND_PATH%" GOTO ERRO_FRONT
 
-:: --- VERIFICAÇÃO DE SEGURANÇA ---
-IF NOT EXIST %BACKEND_PATH% (
-    color 0C
-    ECHO.
-    ECHO ❌ ERRO: Pasta do Back-end não encontrada!
-    ECHO Caminho procurado: %BACKEND_PATH%
-    ECHO Verifique se o nome da pasta no script está igual ao nome real.
-    PAUSE
-    EXIT
-)
-
-IF NOT EXIST %FRONTEND_PATH% (
-    color 0C
-    ECHO.
-    ECHO ❌ ERRO: Pasta do Front-end não encontrada!
-    ECHO Caminho procurado: %FRONTEND_PATH%
-    ECHO Verifique se o nome da pasta no script está igual ao nome real.
-    PAUSE
-    EXIT
-)
-
-
-:: --- INICIANDO O BACK-END ---
+:: --- PARTE 1: BACK-END ---
 ECHO.
-ECHO [1/2] 🐍 Iniciando Servidor Back-end (FastAPI)...
-:: Abre nova janela, entra na pasta do back, ativa venv e roda uvicorn
-start "BACK-END - SIG PILATES" cmd /k "cd /d %BACKEND_PATH% && call venv\Scripts\activate && uvicorn src.main:app --reload"
+ECHO [1/2] Verificando Back-end...
 
+:: Verifica Python
+where python >nul 2>&1
+IF %ERRORLEVEL% NEQ 0 GOTO ERRO_PYTHON
 
-:: --- INICIANDO O FRONT-END ---
-ECHO.
-ECHO [2/2] ⚛️ Iniciando Servidor Front-end (React/Vite)...
-:: Abre nova janela, entra na pasta do front e roda npm run dev
-start "FRONT-END - SIG PILATES" cmd /k "cd /d %FRONTEND_PATH% && npm run dev"
-
+:: Verifica VENV
+IF EXIST "%BACKEND_PATH%\venv" GOTO INICIAR_BACK
 
 ECHO.
-ECHO =================================================================
-ECHO ✅ SISTEMA INICIADO!
-ECHO As janelas dos servidores foram abertas.
-ECHO Pode fechar esta janela se desejar.
-ECHO =================================================================
+ECHO 📦 Criando ambiente virtual (venv)...
+cd /d "%BACKEND_PATH%"
+python -m venv venv
+IF %ERRORLEVEL% NEQ 0 GOTO ERRO_CRIAR_VENV
+
+ECHO 📦 Instalando dependencias...
+call venv\Scripts\activate
+pip install -r requirements.txt
+IF %ERRORLEVEL% NEQ 0 GOTO ERRO_PIP
+
+:INICIAR_BACK
+ECHO.
+ECHO 🔥 Iniciando Servidor Back-end...
+:: Abre janela do Back-end
+START "BACK-END (FastAPI)" cmd /k "cd /d "%BACKEND_PATH%" && call venv\Scripts\activate && uvicorn main:app --reload"
+
+
+:: --- PARTE 2: FRONT-END ---
+ECHO.
+ECHO [2/2] Verificando Front-end...
+
+:: Verifica Node/NPM
+where npm >nul 2>&1
+IF %ERRORLEVEL% NEQ 0 GOTO ERRO_NODE
+
+:: Verifica Node Modules
+IF EXIST "%FRONTEND_PATH%\node_modules" GOTO INICIAR_FRONT
+
+ECHO.
+ECHO 📦 Instalando dependencias do Front (pode demorar)...
+cd /d "%FRONTEND_PATH%"
+call npm install
+IF %ERRORLEVEL% NEQ 0 GOTO ERRO_NPM
+
+:INICIAR_FRONT
+ECHO.
+ECHO 🔥 Iniciando Servidor Front-end...
+:: Abre janela do Front-end
+START "FRONT-END (React)" cmd /k "cd /d "%FRONTEND_PATH%" && npm run dev"
+
+GOTO SUCESSO
+
+:: --- SEÇÃO DE ERROS ---
+
+:ERRO_BACK
+color 0C
+ECHO [ERRO] Pasta "%BACKEND_FOLDER%" nao encontrada.
 PAUSE
+GOTO END
+
+:ERRO_FRONT
+color 0C
+ECHO [ERRO] Pasta "%FRONTEND_FOLDER%" nao encontrada.
+PAUSE
+GOTO END
+
+:ERRO_PYTHON
+color 0C
+ECHO [ERRO] Python nao encontrado. Instale o Python.
+PAUSE
+GOTO END
+
+:ERRO_CRIAR_VENV
+color 0C
+ECHO [ERRO] Falha ao criar o venv.
+PAUSE
+GOTO END
+
+:ERRO_PIP
+color 0C
+ECHO [ERRO] Falha ao instalar dependencias do Python.
+PAUSE
+GOTO END
+
+:ERRO_NODE
+color 0C
+ECHO [ERRO] Node.js/NPM nao encontrado. Instale o Node.js.
+PAUSE
+GOTO END
+
+:ERRO_NPM
+color 0C
+ECHO [ERRO] Falha ao instalar dependencias do Front (npm install).
+PAUSE
+GOTO END
+
+:SUCESSO
+ECHO.
+ECHO =================================================================
+ECHO ✅ SISTEMA INICIADO COM SUCESSO!
+ECHO.
+ECHO As janelas dos servidores foram abertas.
+ECHO Pode minimizar esta janela.
+ECHO =================================================================
+
+:END

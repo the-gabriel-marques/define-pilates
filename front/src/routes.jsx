@@ -1,0 +1,129 @@
+// @ts-nocheck
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
+
+import SignIn from "./pages/Auth/SignIn/SignIn";
+import Login from "./pages/Auth/Login/Login";
+import ColaboratorSignIn from "./pages/Auth/SignIn/ColaboratorSignIn";
+import InstructorSignIn from "./pages/Auth/SignIn/InstructorSignIn";
+import StudentSignIn from "./pages/Auth/SignIn/StudentSignIn";
+import LoginForm from "./pages/Auth/Login/LoginForm";
+import ForgotPassword from "./pages/Auth/ForgotPassword/ForgotPassword";
+import NewPassword from "./pages/Auth/ForgotPassword/NewPassword";
+
+// Páginas do Aluno
+import Meus_Planos from "./pages/Aluno/Meus_Planos";
+import Faturas from "./pages/Aluno/Faturas";
+import MinhasAulas from "./pages/Aluno/MinhasAulas";
+import DashboardEstudante from "./pages/Aluno/DashboardEstudante";
+
+import DashboardAdmin from "./pages/Admin/DashboardAdmin";
+import Estudantes from "./pages/Admin/Estudantes";
+import AgendaEstudio from "./pages/Admin/AgendaEstudio";
+import ColaboradoresPage from "./pages/Admin/TelaColaboradores";
+import FichaTecnica from "./pages/Admin/FichaTecnica";
+import Alertas from "./pages/Admin/Alertas";
+import Financas from "./pages/Admin/Financas";
+import FichaAluno from "./pages/Admin/FichaTecnicaAluno";
+
+import DashboardInstrutor from "./pages/Instrutor/DashboardInstrutor";
+// Removidos: EvolucaoAluno, AtestadoAluno, AulasAluno, FotosAluno
+import RegistroPresenca from "./pages/Instrutor/RegistroPresenca";
+import HistoricoPresenca from "./pages/Instrutor/HistoricoPresenca";
+import EstudantesInstrutor from "./pages/Instrutor/MeusEstudantes";
+import MinhasAulasInstrutor from "./pages/Instrutor/MinhasAulasInstrutor";
+
+import { SidebarProvider } from "./context/SidebarContext";
+
+//Jhon aplicou isso:
+import PlanSelection from "./pages/PLanos/PlanSelection";
+import ClassEnrollment from "./pages/Planos/ClassEnrollment";
+
+
+function AppRoutes() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/colaborator-signin" element={<ColaboratorSignIn />} />
+        <Route path="/instructor-signin" element={<InstructorSignIn />} />
+        <Route path="/student-signin" element={<StudentSignIn />} />
+        <Route path="/login-form" element={<LoginForm />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/new-password" element={<NewPassword />} />
+
+        {/* ROTAS DO ALUNO */}
+        <Route
+          path="/aluno/*"
+          element={
+            <SidebarProvider>
+              <Outlet />
+            </SidebarProvider>
+          }
+        >
+          <Route path="planos" element={<Meus_Planos />} />
+          <Route path="faturas" element={<Faturas />} />
+          <Route path="minhas-aulas" element={<MinhasAulas />} />
+          <Route path="dashboard" element={<DashboardEstudante />} />
+        </Route>
+
+        {/* ROTAS DO INSTRUTOR */}
+        <Route
+          path="/instrutor/*"
+          element={
+            <SidebarProvider>
+              <Outlet />
+            </SidebarProvider>
+          }
+        >
+          <Route path="dashboard" element={<DashboardInstrutor />} />
+          
+          {/* Removidas as rotas de evolução, atestados, aulas e fotos do aluno */}
+          
+          <Route path="historico-presenca" element={<HistoricoPresenca />} />
+          <Route path="registro-presenca" element={<RegistroPresenca />} />
+          <Route path="ficha-tecnica/:id" element={<FichaAluno />} />
+          <Route
+            path="estudantes-instrutor"
+            element={<EstudantesInstrutor />}
+          />
+          <Route
+            path="minhasaulas-instrutor"
+            element={<MinhasAulasInstrutor />}
+          />
+        </Route>
+
+        {/* ROTAS ADMIN */}
+        <Route
+          path="/admin/*"
+          element={
+            <SidebarProvider>
+              <Outlet />
+            </SidebarProvider>
+          }
+        >
+          <Route path="dashboard" element={<DashboardAdmin />} />
+          
+          <Route path="estudantes" element={<Estudantes />} />
+          <Route path="agenda-estudio" element={<AgendaEstudio />} />
+          <Route path="colaboradores" element={<ColaboradoresPage />} />
+          <Route path="colaboradores/:id" element={<FichaTecnica />} />
+          <Route path="alertas" element={<Alertas />} />
+          <Route path="selecao-plano" element={<PlanSelection />} />
+          <Route path="matricular-aulas" element={<ClassEnrollment />} />
+          <Route path="financas" element={<Financas />} />
+          <Route path="ficha/:id" element={<FichaAluno />} />
+        </Route>
+      </Routes>
+    </Router>
+  );
+}
+
+export default AppRoutes;

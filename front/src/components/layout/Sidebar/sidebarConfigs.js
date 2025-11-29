@@ -1,0 +1,185 @@
+// @ts-nocheck
+import {
+  Briefcase,
+  GraduationCap,
+  Calendar,
+  LayoutDashboard,
+  DollarSign,
+  CreditCard,
+  Phone,
+  CheckSquare,
+  FileText,
+  Users,
+  Receipt,
+  TrendingUp,
+  Bell,
+} from "lucide-react";
+
+export const sidebarConfigs = {
+  administrador: {
+    menuItems: [
+      {
+        title: "Dashboard",
+        icon: LayoutDashboard,
+        path: "/admin/dashboard",
+      },
+      {
+        title: "Colaboradores",
+        icon: Briefcase,
+        path: "/admin/colaboradores",
+      },
+      {
+        title: "Estudantes",
+        icon: GraduationCap,
+        path: "/admin/estudantes",
+      },
+      {
+        title: "Agenda dos Estúdios",
+        icon: Calendar,
+        path: "/admin/agenda-estudio",
+      },
+      {
+        title: "Finanças",
+        icon: DollarSign,
+        path: "/admin/financas",
+      },
+      {
+        title: "Alertas",
+        icon: Bell,
+        path: "/admin/alertas",
+      },
+    ],
+    userInfo: {
+      name: "Administrador",
+      email: "administrador@email.com",
+    },
+  },
+
+  admmaster: {
+    menuItems: [
+      {
+        title: "Dashboard",
+        icon: LayoutDashboard,
+        path: "/admmaster/dashboard",
+      },
+      {
+        title: "Colaboradores",
+        icon: Briefcase,
+        path: "/admmaster/colaboradores",
+      },
+      {
+        title: "Estudantes",
+        icon: GraduationCap,
+        path: "/admmaster/estudantes",
+      },
+      {
+        title: "Agenda dos Estúdios",
+        icon: Calendar,
+        path: "/admmaster/agenda",
+      },
+      {
+        title: "Finanças",
+        icon: DollarSign,
+        path: "/admmaster/financas",
+      },
+      {
+        title: "Planos & Pagamentos",
+        icon: CreditCard,
+        path: "/admmaster/planos-pagamentos",
+      },
+      {
+        title: "Contatos / Reagendamentos",
+        icon: Phone,
+        path: "/admmaster/contatos-reagendamentos",
+      },
+      {
+        title: "Registro de Faltas / Presenças",
+        icon: CheckSquare,
+        path: "/admmaster/registro-faltas",
+      },
+    ],
+    userInfo: {
+      name: "Administrador Master",
+      email: "admmaster@email.com",
+    },
+  },
+
+  aluno: {
+    menuItems: [
+      {
+        title: "Dashboard",
+        icon: TrendingUp,
+        path: "/aluno/dashboard",
+      },
+      {
+        title: "Minhas Aulas",
+        icon: Calendar,
+        path: "/aluno/minhas-aulas",
+      },
+      {
+        title: "Meus Planos",
+        icon: CreditCard,
+        path: "/aluno/planos",
+      },
+    ],
+    userInfo: {
+      name: "Aluno",
+      email: "aluno@gmail.com",
+    },
+  },
+
+  instrutor: {
+    menuItems: [
+      { 
+        title: 'Dashboard',
+        icon: LayoutDashboard, 
+        path: '/instrutor/dashboard' 
+      },
+      {
+        title: "Minha Agenda",
+        icon: Calendar,
+        path: "/instrutor/minhasaulas-instrutor",
+      },
+      {
+        title: "Meus Alunos",
+        icon: Users,
+        path: "/instrutor/estudantes-instrutor",
+      },
+    ],
+    userInfo: {
+      name: "Instrutor",
+      email: "instrutor@email.com",
+    },
+  },
+
+  recepcionista: {
+    menuItems: [
+      {
+        title: "Estudantes",
+        icon: Users,
+        path: "/recepcionista/estudantes",
+      },
+      {
+        title: "Agenda dos Estúdios",
+        icon: Calendar,
+        path: "/recepcionista/agenda",
+      },
+      {
+        title: "Planos & Pagamentos",
+        icon: CreditCard,
+        path: "/recepcionista/planos-pagamentos",
+      },
+      {
+        title: "Contatos / Reagendamentos",
+        icon: Phone,
+        path: "/recepcionista/contatos-reagendamentos",
+      },
+    ],
+    userInfo: {
+      name: "Recepcionista",
+      email: "recepcionista@email.com",
+    },
+  },
+};
+
+export default sidebarConfigs;
