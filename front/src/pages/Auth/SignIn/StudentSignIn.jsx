@@ -219,7 +219,8 @@ const StudentSignIn = () => {
                             name="senha_user"
                             value={formData.senha_user}
                             onChange={(e) => setFormData(prev => ({ ...prev, senha_user: e.target.value }))}
-                            required disabled={isLoading}
+                            // required 
+                            disabled={isLoading}
                         />
                     </div>
                 </div>
