@@ -45,11 +45,12 @@ call venv\Scripts\activate
 pip install -r requirements.txt
 IF %ERRORLEVEL% NEQ 0 GOTO ERRO_PIP
 
+
 :INICIAR_BACK
 ECHO.
 ECHO 🔥 Iniciando Servidor Back-end...
 :: Abre janela do Back-end
-START "BACK-END (FastAPI)" cmd /k "cd /d "%BACKEND_PATH%" && call venv\Scripts\activate && uvicorn main:app --reload"
+START "BACK-END (FastAPI)" cmd /k "cd /d "%BACKEND_PATH%" && call venv\Scripts\activate && alembic upgrade head && uvicorn main:app --reload"
 
 
 :: --- PARTE 2: FRONT-END ---
