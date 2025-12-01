@@ -33,11 +33,14 @@ export default function MeusEstudantes() {
         });
 
         const aulas = responseAulas.data;
+        
+        // console.log(aulas)
+
         const uniqueStudentMap = new Map();
 
         aulas.forEach((aula) => {
           const participantes = aula.participantes || aula.participantes_ids || [];
-          
+          // console.log(participantes)
           if (Array.isArray(participantes)) {
             participantes.forEach((studentId) => {
               if (!uniqueStudentMap.has(studentId)) {
@@ -62,6 +65,7 @@ export default function MeusEstudantes() {
                   estudante_id: student.id 
                 }
               });
+              // console.log(responseName.data)
               
               if (responseName.data && responseName.data.name_user) {
                 return {
@@ -80,7 +84,7 @@ export default function MeusEstudantes() {
             return student;
           })
         );
-        
+        // console.log(enrichedStudents)
         enrichedStudents.sort((a, b) => a.name.localeCompare(b.name));
         
         setStudents(enrichedStudents);

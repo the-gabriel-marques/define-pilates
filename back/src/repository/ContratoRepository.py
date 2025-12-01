@@ -20,7 +20,6 @@ class ContratoRepository:
 
     def _get_active_contract(self, estudante_id: int) -> Optional[Contrato]:
         """Busca o contrato ativo principal para o estudante."""
-        # A lógica real pode ser mais complexa (validade, tipo, prioridade), mas simplificamos:
         stmt = select(Contrato).join(AdesaoPlano).where(
             and_(
                 AdesaoPlano.fk_id_estudante == estudante_id,

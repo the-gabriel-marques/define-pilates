@@ -17,20 +17,36 @@ from typing import List
 from src.services.authService import auth_manager
 
 router = APIRouter(prefix="/agenda", tags=["Agenda e Cronograma (MongoDB)"])
+
+'''
+Instânancia das classe de controllers necessárias:
+-agenda_controller: Contáto constante com mongoDB (Atlas) para obter e empurrar informações para nossas coleções de aula e agenda
+-Aual_controller: Contáto constante com mongoDB (Atlas) e AQL(tabelas Aula, Estudante_Aula)
+para obter e empurrar informações para nossas coleções de aula e agenda
+'''
+
 agenda_controller = AgendaController()
 aula_controller = AulaController()
 
 
+
+"""
+Parte de instâncias para melhorar a atribuição de valores para parametros necessários
+"""
+
+
+#Deve receber uma coleção do tipo Aula para poder criar a instancia-> 
 def get_agenda_aula_repository(
     collection: AsyncIOMotorCollection = Depends(get_agenda_aulas_dependency) 
 ) -> AgendaAulaRepository:
+    """#devolve uma AgendaAula, no caso, uma instância de agenda aula"""
     return AgendaAulaRepository(collection=collection)
 
 
 def get_agenda_aluno_repository(
     collection: AsyncIOMotorCollection = Depends(get_agenda_aluno_dependency) 
 ) -> AgendaAlunoRepository:
-    """Retorna uma instância do Repositório de Agenda do Aluno (MongoDB)."""
+    """#Retorna uma instância do Repositório de Agenda do Aluno """
     return AgendaAlunoRepository(collection=collection)
 
 def get_contrato_repository(

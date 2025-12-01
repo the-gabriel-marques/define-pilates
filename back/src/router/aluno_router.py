@@ -26,7 +26,7 @@ def create_aluno_endpoint(
     return aluno_controller.create_aluno(payload, current_user, db_session=db)
 
 
-@router.get("/{user_id}", response_model=UserResponse, summary="Listar alunos por id(Requer autenticação de Admin)")
+@router.get("/{user_id}", response_model=UserResponse, summary="Listar alunos por id do aluno(Requer autenticação de Admin)")
 def get_aluno_by_id_endpoint(
     user_id:int,
     db:Session=Depends(get_db),
@@ -34,7 +34,13 @@ def get_aluno_by_id_endpoint(
 ):
     return aluno_controller.select_aluno_by_id(user_id=user_id, current_user=current_user, db_session=db)
 
-
+@router.get("/user/{user_id}", response_model=UserResponse, summary="Listar alunos por id do usuario(Requer autenticação de Admin)")
+def get_aluno_by_user_id_endpoint(
+    user_id:int,
+    db:Session=Depends(get_db),
+    current_user:dict=Depends(auth_manager)
+):
+    return aluno_controller.select_aluno_by_user_id(user_id=user_id, current_user=current_user, db_session=db)
 
 
 @router.get("/", response_model=List[UserResponse], summary="Listar todos os alunos por estudio (Requer autenticação de Admin)")

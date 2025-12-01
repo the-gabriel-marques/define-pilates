@@ -44,13 +44,12 @@ class TargetUserFinder:
         estudante_model = AlunoModel(db_session=session_db)
         target_user_id = estudante_model.select_id_user_by_fk_id_estudante(estudante_id) 
         
-        if target_user_id is None: # Use 'is None' pois 0 ou outros IDs são possíveis, embora improvável
+        if target_user_id is None: 
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, 
                 detail=f"Estudante ID {estudante_id} não encontrado."
             )
             
-        # Aplica a validação de permissão estendida (Admin/Colaborador/Instrutor OU Dono)
         UserValidation.check_self_or_intructor_or_admin_permission(
             current_user=current_user, 
             target_user_id=target_user_id

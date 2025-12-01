@@ -44,9 +44,19 @@ const LoginForm = () => {
                 localStorage.setItem('userRole', userRole);
                 
                 // Salva um "rascunho" do usuário só com o ID do token, para a Sidebar saber quem buscar
+                // if(userRole == 'aluno'){
+                //     console.log(decodedToken)
+                //     console.log(decodedToken.data)
+                //     const userId = decodedToken.estudante.id_estudante || decodedToken.sub;
+                //     localStorage.setItem('userIdTemp', userId);
+                // }
+                // else{
+                //     const userId = decodedToken.id_user || decodedToken.sub;
+                //     localStorage.setItem('userIdTemp', userId); 
+
+                // }
                 const userId = decodedToken.id_user || decodedToken.sub;
                 localStorage.setItem('userIdTemp', userId); 
-
                 setMessage({ text: 'Sucesso! Redirecionando...', type: 'sucesso' });
                 
                 // Redirecionamento rápido

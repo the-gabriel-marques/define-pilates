@@ -4,6 +4,8 @@ from src.model.UserModel import UserModel
 from src.utils.authUtils import auth_manager
 from src.schemas.user_schemas import UserResponse, LoginRequestSchema, NivelAcessoEnum, AlunoCreatePayload, InstrutorCreatePayload, ColaboradorCreatePayload
 
+
+
 import logging
 class UserValidation():
     @staticmethod
@@ -36,6 +38,9 @@ class UserValidation():
             NivelAcessoEnum.COLABORADOR.value,
         ]
         UserValidation._check_permission(current_user, allowed_levels)
+
+
+
     @staticmethod
     def _check_instrutor_permission( current_user: dict):
         allowed_levels = [

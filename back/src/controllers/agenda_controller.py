@@ -7,8 +7,13 @@ from src.controllers.validations.permissionValidation import UserValidation
 from datetime import date, datetime
 from typing import List, Dict, Any
 from src.model.AulaModel import AulaModel
-from starlette.concurrency import run_in_threadpool # Adicionar esta importação
+from starlette.concurrency import run_in_threadpool
 from src.controllers.utils.TargetUserFinder import TargetUserFinder
+
+
+
+
+
 class AgendaController:
 
     async def get_cronograma(self, start_date: date, 

@@ -94,11 +94,12 @@ const DashboardEstudante = () => {
     try {
       // 1. DADOS DO USUÁRIO (Essencial para Sidebar e ID)
       const userRes = await api.get("/users/me");
+      // console.log(userRes.data)
       const user = userRes.data;
       
       const nomeUser = user.name_user || user.nome || "Estudante";
       const emailUser = user.email_user || user.email || "";
-      const userId = user.id_user || user.id;
+      const userId = user.estudante.id_estudante || user.id_user || user.id;
 
       // Atualiza IMEDIATAMENTE a sidebar e header
       setUserInfo({ name: nomeUser, email: emailUser, role: "Estudante" });
@@ -169,7 +170,7 @@ const DashboardEstudante = () => {
             
             setLatestInvoice({
                 month: new Date(last.data_vencimento).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-                amount: `R$ ${last.valor || '0,00'}`,
+                amount: `R$ ${last.valor_pagamento || '0,00'}`,
                 status: last.status === 'PAGO' ? 'paid' : (last.status === 'ATRASADO' ? 'overdue' : 'pending'),
                 dueDate: new Date(last.data_vencimento).toLocaleDateString('pt-BR'),
                 issueDate: last.data_pagamento ? new Date(last.data_pagamento).toLocaleDateString('pt-BR') : '---',

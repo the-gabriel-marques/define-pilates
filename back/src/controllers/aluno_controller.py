@@ -89,8 +89,29 @@ class AlunoController:
         UserValidation.check_self_or_intructor_or_admin_permission(current_user, user_id)
         
         user_model = AlunoModel(db_session=db_session)
+        #Parte para validar # converter o valor do usuario de entrada para garantir que seja esse individuo que está manipulando
+        #este método
         student_user_id = TargetUserFinder.check_and_get_target_user_id_all_users(session_db=db_session, current_user=current_user, estudante_id=user_id)
+        
         user = user_model.select_student_by_id(user_id=student_user_id) 
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário do tipo aluno não encontrado."
+            )
+        return UserResponse.model_validate(user)
+
+
+    def select_aluno_by_user_id(self, user_id: int, current_user: dict, db_session: Session):
+
+        
+        UserValidation.check_self_or_intructor_or_admin_permission(current_user, user_id)
+        
+        user_model = AlunoModel(db_session=db_session)
+        #Parte para validar # converter o valor do usuario de entrada para garantir que seja esse individuo que está manipulando
+        #este método
+        user = user_model.select_student_by_id(user_id=user_id) 
 
         if not user:
             raise HTTPException(
@@ -98,7 +119,6 @@ class AlunoController:
                 detail="Usuário não encontrado."
             )
         return UserResponse.model_validate(user)
-    
 
 
 

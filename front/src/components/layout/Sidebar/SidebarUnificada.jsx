@@ -49,13 +49,13 @@ const Sidebar = ({ menuItems, userInfo, isOpen, onOpenChange }) => {
 
         if (userId && userRole) {
             let endpoint = "";
-            
+           
             // Define a rota específica baseada no cargo
             if (userRole.includes("instrutor") || userRole.includes("professor")) {
                 endpoint = `/instrutores/${userId}`; 
             } 
             else if (userRole.includes("aluno")) {
-                endpoint = `/alunos/${userId}`;      
+                endpoint = `/alunos/user/${userId}`;      
             } 
             else {
                 endpoint = `/colaboradore/${userId}`; 
@@ -64,6 +64,7 @@ const Sidebar = ({ menuItems, userInfo, isOpen, onOpenChange }) => {
             try {
                 // Tenta buscar na rota específica (ex: /alunos/11)
                 const response = await api.get(endpoint);
+                // console.log(response.data)
                 const dadosAPI = response.data;
 
                 const novoUsuario = {
